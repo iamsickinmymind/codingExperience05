@@ -24,6 +24,7 @@ protected:
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
+	FVector GetAirResistence();
 
 public:	
 	// Called every frame
@@ -41,17 +42,22 @@ protected:
 	class UBoxComponent* BoxCollision = nullptr;
 
 	// Mass in kg
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(EditAnywhere, Category = "Movement")
 	float Mass;
 
 	// Max force applied to car when max throttle in Newtons
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MaxDrivingForce;
 
 	// How many degrees per second can the vehicle turn
 	// Degrees / s
-	UPROPERTY(EditAnywhere, Category = "Components")
+	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MaxDegreesPerSecond;
+
+	// Higher means more drag
+	// Drag in Kg / m
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float DragCoefficient;
 
 private:
 

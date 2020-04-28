@@ -20,6 +20,7 @@ AGoKart::AGoKart()
 	Mass = 1000;
 	MaxDrivingForce = 10000;
 	MaxDegreesPerSecond = 90.f;
+	DragCoefficient = 15;
 }
 
 void AGoKart::BeginPlay()
@@ -34,6 +35,8 @@ void AGoKart::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
+
+	Force += GetAirResistence();
 
 	FVector Acceleration = Force / Mass;
 
@@ -65,6 +68,11 @@ void AGoKart::SetLocationFromVelocity(float &DeltaTime)
 
 		Velocity = FVector::ZeroVector;
 	}
+}
+
+FVector AGoKart::GetAirResistence() {
+
+	return -Velocity.GetSafeNormal() * (Velocity.SizeSquared()) * DragCoefficient;
 }
 
 // Called to bind functionality to input
