@@ -6,10 +6,9 @@
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 
-// Sets default values
 AGoKart::AGoKart()
 {
- 	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+
 	PrimaryActorTick.bCanEverTick = true;
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(FName("BoxCollision"));
@@ -20,9 +19,9 @@ AGoKart::AGoKart()
 
 	Mass = 1000;
 	MaxDrivingForce = 10000;
+	MaxDegreesPerSecond = 90.f;
 }
 
-// Called when the game starts or when spawned
 void AGoKart::BeginPlay()
 {
 	Super::BeginPlay();
@@ -40,7 +39,19 @@ void AGoKart::Tick(float DeltaTime)
 
 	Velocity += Acceleration * DeltaTime;
 
+	SetRotation(DeltaTime);
+
 	SetLocationFromVelocity(DeltaTime);
+}
+
+void AGoKart::SetRotation(float &DeltaTime)
+{
+	float RotationAngle = MaxDegreesPerSecond * DeltaTime * SteeringThrow;
+	FQuat RotationDelta(GetActorUpVector(), FMath::DegreesToRadians(RotationAngle));
+
+	Velocity = RotationDelta.RotateVector(Velocity);
+
+	AddActorWorldRotation(RotationDelta, true);
 }
 
 void AGoKart::SetLocationFromVelocity(float &DeltaTime)
@@ -62,10 +73,16 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAxis(FName("MoveForward"), this, &AGoKart::MoveForward);
+	PlayerInputComponent->BindAxis(FName("MoveRight"), this, &AGoKart::MoveRight);
 }
 
 void AGoKart::MoveForward(float Value) {
 
 	//Velocity = GetActorForwardVector() * 20 * Value;
 	Throttle = Value;
+}
+
+void AGoKart::MoveRight(float Value ) {
+
+	SteeringThrow = Value;
 }

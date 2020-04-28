@@ -20,8 +20,10 @@ protected:
 	virtual void BeginPlay() override;
 
 	void SetLocationFromVelocity(float &DeltaTime);
+	void SetRotation(float &DeltaTime);
 
 	void MoveForward(float Value);
+	void MoveRight(float Value);
 
 public:	
 	// Called every frame
@@ -42,15 +44,19 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Components")
 	float Mass;
 
-	UPROPERTY(EditAnywhere, Category = "Components")
-	float Throttle;
-
 	// Max force applied to car when max throttle in Newtons
 	UPROPERTY(EditAnywhere, Category = "Components")
 	float MaxDrivingForce;
 
+	// How many degrees per second can the vehicle turn
+	// Degrees / s
+	UPROPERTY(EditAnywhere, Category = "Components")
+	float MaxDegreesPerSecond;
+
 private:
 
 	FVector Velocity;
-	
+
+	float SteeringThrow;
+	float Throttle;
 };
