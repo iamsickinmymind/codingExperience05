@@ -21,6 +21,7 @@ AGoKart::AGoKart()
 	MaxDrivingForce = 10000;
 	MaxDegreesPerSecond = 90.f;
 	DragCoefficient = 15;
+	RollingResistenceCoefficient = 0.015;
 }
 
 void AGoKart::BeginPlay()
@@ -37,6 +38,7 @@ void AGoKart::Tick(float DeltaTime)
 	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
 
 	Force += GetAirResistence();
+	Force += GetRollingResistence();
 
 	FVector Acceleration = Force / Mass;
 
@@ -73,6 +75,15 @@ void AGoKart::SetLocationFromVelocity(float &DeltaTime)
 FVector AGoKart::GetAirResistence() {
 
 	return -Velocity.GetSafeNormal() * (Velocity.SizeSquared()) * DragCoefficient;
+}
+
+FVector AGoKart::GetRollingResistence() {
+
+	// Convert from cm to m and to positive number
+	float AccelerationDueToGravity = -GetWorld()->GetGravityZ() / 100;
+	float NormalForce = Mass * AccelerationDueToGravity;
+
+	return -Velocity.GetSafeNormal() * RollingResistenceCoefficient * NormalForce;
 }
 
 // Called to bind functionality to input

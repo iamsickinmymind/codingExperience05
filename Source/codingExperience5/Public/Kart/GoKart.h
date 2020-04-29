@@ -25,6 +25,7 @@ protected:
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	FVector GetAirResistence();
+	FVector GetRollingResistence();
 
 public:	
 	// Called every frame
@@ -58,6 +59,12 @@ protected:
 	// Drag in Kg / m
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float DragCoefficient;
+
+	// Rolling resistence
+	// Higher is higher resistence
+	// Resistence in Kg / m
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float RollingResistenceCoefficient;
 
 private:
 
