@@ -6,6 +6,8 @@
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 
+#include "DrawDebugHelpers.h"
+
 AGoKart::AGoKart()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -24,6 +26,25 @@ AGoKart::AGoKart()
 
 	SetReplicates(true);
 	SetReplicateMovement(true);
+}
+
+FString GetEnumText(ENetRole Role) {
+
+	switch (Role)
+	{
+	case ROLE_None:
+		return "ROLE_None";
+
+	case ROLE_SimulatedProxy:
+		return "ROLE_SimulatedProxy";
+	case ROLE_AutonomousProxy:
+		return "ROLE_AutonomousProxy";
+	case ROLE_Authority:
+		return "ROLE_Authority";
+	default:
+		return "";
+		break;
+	}
 }
 
 void AGoKart::BeginPlay()
@@ -49,6 +70,8 @@ void AGoKart::Tick(float DeltaTime)
 	SetRotation(DeltaTime);
 
 	SetLocationFromVelocity(DeltaTime);
+
+	DrawDebugString(GetWorld(), FVector(0,0,100), GetEnumText(Role), this, FColor::Red, 0,1);
 }
 
 void AGoKart::SetRotation(float &DeltaTime)
@@ -94,8 +117,29 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis(FName("MoveForward"), this, &AGoKart::Server_MoveForward);
-	PlayerInputComponent->BindAxis(FName("MoveRight"), this, &AGoKart::Server_MoveRight);
+	PlayerInputComponent->BindAxis(FName("MoveForward"), this, &AGoKart::MoveForward);
+	PlayerInputComponent->BindAxis(FName("MoveRight"), this, &AGoKart::MoveRight);
+}
+
+void AGoKart::MoveForward(float Value) {
+
+	//Velocity = GetActorForwardVector() * 20 * Value;
+	Throttle = Value;
+
+	if (Role < ROLE_Authority) {
+
+		Server_MoveForward(Value);
+	}
+}
+
+void AGoKart::MoveRight(float Value) {
+
+	SteeringThrow = Value;
+
+	if (Role < ROLE_Authority) {
+
+		Server_MoveRight(Value);
+	}
 }
 
 void AGoKart::Server_MoveForward_Implementation(float Value) {
