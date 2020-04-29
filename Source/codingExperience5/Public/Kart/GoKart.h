@@ -50,10 +50,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MaxDrivingForce;
 
-	// How many degrees per second can the vehicle turn
-	// Degrees / s
+	// Minimum radius of the car turning circle at full lock
+	// Meters
 	UPROPERTY(EditAnywhere, Category = "Movement")
-	float MaxDegreesPerSecond;
+	float MinimumTurningRadius;
 
 	// Higher means more drag
 	// Drag in Kg / m

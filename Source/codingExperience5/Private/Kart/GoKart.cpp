@@ -19,7 +19,7 @@ AGoKart::AGoKart()
 
 	Mass = 1000;
 	MaxDrivingForce = 10000;
-	MaxDegreesPerSecond = 90.f;
+	MinimumTurningRadius = 10;
 	DragCoefficient = 15;
 	RollingResistenceCoefficient = 0.015;
 }
@@ -51,8 +51,9 @@ void AGoKart::Tick(float DeltaTime)
 
 void AGoKart::SetRotation(float &DeltaTime)
 {
-	float RotationAngle = MaxDegreesPerSecond * DeltaTime * SteeringThrow;
-	FQuat RotationDelta(GetActorUpVector(), FMath::DegreesToRadians(RotationAngle));
+	float DeltaLocation = FVector::DotProduct(GetActorForwardVector(), Velocity) * DeltaTime;
+	float RotationAngle = DeltaLocation / MinimumTurningRadius * SteeringThrow;
+	FQuat RotationDelta(GetActorUpVector(), RotationAngle);
 
 	Velocity = RotationDelta.RotateVector(Velocity);
 
