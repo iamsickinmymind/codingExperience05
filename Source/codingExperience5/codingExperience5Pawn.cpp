@@ -129,8 +129,8 @@ void AcodingExperience5Pawn::SetupPlayerInputComponent(class UInputComponent* Pl
 	// set up gameplay key bindings
 	check(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis("MoveForward", this, &AcodingExperience5Pawn::MoveForward);
-	PlayerInputComponent->BindAxis("MoveRight", this, &AcodingExperience5Pawn::MoveRight);
+	PlayerInputComponent->BindAxis("MoveForward", this, &AcodingExperience5Pawn::Server_MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AcodingExperience5Pawn::Server_MoveRight);
 	PlayerInputComponent->BindAxis("LookUp");
 	PlayerInputComponent->BindAxis("LookRight");
 
@@ -141,12 +141,12 @@ void AcodingExperience5Pawn::SetupPlayerInputComponent(class UInputComponent* Pl
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &AcodingExperience5Pawn::OnResetVR); 
 }
 
-void AcodingExperience5Pawn::MoveForward(float Val)
+void AcodingExperience5Pawn::Server_MoveForward(float Val)
 {
 	GetVehicleMovementComponent()->SetThrottleInput(Val);
 }
 
-void AcodingExperience5Pawn::MoveRight(float Val)
+void AcodingExperience5Pawn::Server_MoveRight(float Val)
 {
 	GetVehicleMovementComponent()->SetSteeringInput(Val);
 }

@@ -8,7 +8,6 @@
 
 AGoKart::AGoKart()
 {
-
 	PrimaryActorTick.bCanEverTick = true;
 
 	BoxCollision = CreateDefaultSubobject<UBoxComponent>(FName("BoxCollision"));
@@ -22,6 +21,9 @@ AGoKart::AGoKart()
 	MinimumTurningRadius = 10;
 	DragCoefficient = 15;
 	RollingResistenceCoefficient = 0.015;
+
+	SetReplicates(true);
+	SetReplicateMovement(true);
 }
 
 void AGoKart::BeginPlay()
@@ -92,17 +94,27 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	PlayerInputComponent->BindAxis(FName("MoveForward"), this, &AGoKart::MoveForward);
-	PlayerInputComponent->BindAxis(FName("MoveRight"), this, &AGoKart::MoveRight);
+	PlayerInputComponent->BindAxis(FName("MoveForward"), this, &AGoKart::Server_MoveForward);
+	PlayerInputComponent->BindAxis(FName("MoveRight"), this, &AGoKart::Server_MoveRight);
 }
 
-void AGoKart::MoveForward(float Value) {
+void AGoKart::Server_MoveForward_Implementation(float Value) {
 
 	//Velocity = GetActorForwardVector() * 20 * Value;
 	Throttle = Value;
 }
 
-void AGoKart::MoveRight(float Value ) {
+bool AGoKart::Server_MoveForward_Validate(float Value) {
+
+	return FMath::Abs(Value) <= 1;
+}
+
+void AGoKart::Server_MoveRight_Implementation(float Value ) {
 
 	SteeringThrow = Value;
+}
+
+bool AGoKart::Server_MoveRight_Validate(float Value) {
+
+	return FMath::Abs(Value) <= 1;
 }

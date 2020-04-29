@@ -83,14 +83,14 @@ public:
 	// End Actor interface
 
 	/** Handle pressing forwards */
-	void MoveForward(float Val);
+	void Server_MoveForward(float Val);
 	/** Setup the strings used on the hud */
 	void SetupInCarHUD();
 
 	/** Update the physics material used by the vehicle mesh */
 	void UpdatePhysicsMaterial();
 	/** Handle pressing right */
-	void MoveRight(float Val);
+	void Server_MoveRight(float Val);
 	/** Handle handbrake pressed */
 	void OnHandbrakePressed();
 	/** Handle handbrake released */
