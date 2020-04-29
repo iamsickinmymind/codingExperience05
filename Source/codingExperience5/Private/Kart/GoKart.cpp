@@ -6,13 +6,15 @@
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 
+#include "Net/UnrealNetwork.h"
+
 #include "DrawDebugHelpers.h"
 
 AGoKart::AGoKart()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	BoxCollision = CreateDefaultSubobject<UBoxComponent>(FName("BoxCollision"));
+	BoxCollision = CreateDefaultSubobject<UBoxComponent>(FName("BoxCollision")); 
 	RootComponent = BoxCollision;
 
 	KartMesh = CreateDefaultSubobject<USkeletalMeshComponent>(FName("Mesh"));
@@ -24,33 +26,13 @@ AGoKart::AGoKart()
 	DragCoefficient = 15;
 	RollingResistenceCoefficient = 0.015;
 
+	NetUpdateFrequency = 1.f;
 	SetReplicates(true);
-	SetReplicateMovement(true);
-}
-
-FString GetEnumText(ENetRole Role) {
-
-	switch (Role)
-	{
-	case ROLE_None:
-		return "ROLE_None";
-
-	case ROLE_SimulatedProxy:
-		return "ROLE_SimulatedProxy";
-	case ROLE_AutonomousProxy:
-		return "ROLE_AutonomousProxy";
-	case ROLE_Authority:
-		return "ROLE_Authority";
-	default:
-		return "";
-		break;
-	}
 }
 
 void AGoKart::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -71,7 +53,15 @@ void AGoKart::Tick(float DeltaTime)
 
 	SetLocationFromVelocity(DeltaTime);
 
-	DrawDebugString(GetWorld(), FVector(0,0,100), GetEnumText(Role), this, FColor::Red, 0,1);
+	if (HasAuthority()) {
+
+		ReplicatedTransform = GetActorTransform();
+	}
+}
+
+void AGoKart::OnRep_ReplicatedTransform() {
+
+	SetActorTransform(ReplicatedTransform);
 }
 
 void AGoKart::SetRotation(float &DeltaTime)
@@ -161,4 +151,11 @@ void AGoKart::Server_MoveRight_Implementation(float Value ) {
 bool AGoKart::Server_MoveRight_Validate(float Value) {
 
 	return FMath::Abs(Value) <= 1;
+}
+
+void AGoKart::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const {
+
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AGoKart, ReplicatedTransform);
 }

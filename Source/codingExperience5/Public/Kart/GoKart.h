@@ -34,6 +34,9 @@ protected:
 	FVector GetAirResistence();
 	FVector GetRollingResistence();
 
+	UFUNCTION()
+	void OnRep_ReplicatedTransform();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -74,6 +77,9 @@ protected:
 	float RollingResistenceCoefficient;
 
 private:
+
+	UPROPERTY(ReplicatedUsing=OnRep_ReplicatedTransform)
+	FTransform ReplicatedTransform;
 
 	FVector Velocity;
 
