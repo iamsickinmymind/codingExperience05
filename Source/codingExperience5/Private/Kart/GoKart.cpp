@@ -5,6 +5,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/GKMovementComponent.h"
 
 #include "Net/UnrealNetwork.h"
 
@@ -14,17 +15,14 @@ AGoKart::AGoKart()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	BoxCollision = CreateDefaultSubobject<UBoxComponent>(FName("BoxCollision")); 
+	BoxCollision = CreateDefaultSubobject<UBoxComponent>(FName("BoxCollision"));
 	RootComponent = BoxCollision;
 
 	KartMesh = CreateDefaultSubobject<USkeletalMeshComponent>(FName("Mesh"));
 	KartMesh->SetupAttachment(GetRootComponent());
 
-	Mass = 1000;
-	MaxDrivingForce = 10000;
-	MinimumTurningRadius = 10;
-	DragCoefficient = 15;
-	RollingResistenceCoefficient = 0.015;
+	GKMovementComponent = CreateDefaultSubobject<UGKMovementComponent>(FName("MovementComponent"));
+	if ensure(!(GKMovementComponent == nullptr)) return;
 
 	NetUpdateFrequency = 25.f;
 	SetReplicates(true);
@@ -40,64 +38,40 @@ void AGoKart::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (Role == ROLE_AutonomousProxy) {
+	if (GKMovementComponent != nullptr) {
 
-		FSyncMove Move = CreateMove(DeltaTime);
-		SimulateMove(Move);
-		UnacknowledgedMoves.Add(Move);
-		Server_SendMove(Move);
-	}
-	// we are the server and in control of the pawn
-	if (Role == ROLE_Authority && GetRemoteRole() == ROLE_SimulatedProxy) {
+		if (Role == ROLE_AutonomousProxy) {
 
-		FSyncMove Move = CreateMove(DeltaTime);
-		Server_SendMove(Move);
-	}
+			FSyncMove Move = GKMovementComponent->CreateMove(DeltaTime);
+			GKMovementComponent->SimulateMove(Move);
+			UnacknowledgedMoves.Add(Move);
+			Server_SendMove(Move);
+		}
+		// we are the server and in control of the pawn
+		if (Role == ROLE_Authority && GetRemoteRole() == ROLE_SimulatedProxy) {
 
-	if (Role == ROLE_SimulatedProxy) {
+			FSyncMove Move = GKMovementComponent->CreateMove(DeltaTime);
+			Server_SendMove(Move);
+		}
 
-		SimulateMove(ServerState.LastMove);
+		if (Role == ROLE_SimulatedProxy) {
+
+			GKMovementComponent->SimulateMove(ServerState.LastMove);
+		}
 	}
 }
 
 void AGoKart::OnRep_ServerState() {
 
 	SetActorTransform(ServerState.Transform);
-	Velocity = ServerState.Velocity;
+	GKMovementComponent->SetVelocity(ServerState.Velocity);
 
 	ClearAcknowledgedMoves(ServerState.LastMove);
 
-	for (const auto& Itr : UnacknowledgedMoves)	{
+	for (const auto& Itr : UnacknowledgedMoves) {
 
-		SimulateMove(Itr);
+		GKMovementComponent->SimulateMove(Itr);
 	}
-}
-
-void AGoKart::SimulateMove(const FSyncMove& Move) {
-
-	FVector Force = GetActorForwardVector() * MaxDrivingForce * Move.Throttle;
-
-	Force += GetAirResistence();
-	Force += GetRollingResistence();
-
-	FVector Acceleration = Force / Mass;
-
-	Velocity += Acceleration * Move.DeltaTime;
-
-	SetRotation(Move.DeltaTime, Move.SteeringThrow);
-
-	SetLocationFromVelocity(Move.DeltaTime);
-}
-
-FSyncMove AGoKart::CreateMove(float DeltaTime) {
-
-	FSyncMove Move;
-	Move.DeltaTime = DeltaTime;
-	Move.SteeringThrow = SteeringThrow;
-	Move.Throttle = Throttle;
-	Move.TimeStamp = GetWorld()->TimeSeconds;
-
-	return Move;
 }
 
 void AGoKart::ClearAcknowledgedMoves(FSyncMove LastMove) {
@@ -115,44 +89,6 @@ void AGoKart::ClearAcknowledgedMoves(FSyncMove LastMove) {
 	UnacknowledgedMoves = NewMoves;
 }
 
-void AGoKart::SetRotation(const float &DeltaTime, float InSteeringThrow)
-{
-	float DeltaLocation = FVector::DotProduct(GetActorForwardVector(), Velocity) * DeltaTime;
-	float RotationAngle = DeltaLocation / MinimumTurningRadius * InSteeringThrow;
-	FQuat RotationDelta(GetActorUpVector(), RotationAngle);
-
-	Velocity = RotationDelta.RotateVector(Velocity);
-
-	AddActorWorldRotation(RotationDelta, true);
-}
-
-void AGoKart::SetLocationFromVelocity(const float &DeltaTime)
-{
-	FVector Delta = Velocity * 100 * DeltaTime;
-
-	FHitResult HitResult;
-	AddActorWorldOffset(Delta, true, &HitResult);
-
-	if (HitResult.bBlockingHit) {
-
-		Velocity = FVector::ZeroVector;
-	}
-}
-
-FVector AGoKart::GetAirResistence() {
-
-	return -Velocity.GetSafeNormal() * (Velocity.SizeSquared()) * DragCoefficient;
-}
-
-FVector AGoKart::GetRollingResistence() {
-
-	// Convert from cm to m and to positive number
-	float AccelerationDueToGravity = -GetWorld()->GetGravityZ() / 100;
-	float NormalForce = Mass * AccelerationDueToGravity;
-
-	return -Velocity.GetSafeNormal() * RollingResistenceCoefficient * NormalForce;
-}
-
 void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -163,21 +99,21 @@ void AGoKart::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AGoKart::MoveForward(float Value) {
 
-	Throttle = Value;
+	GKMovementComponent->SetThrottle(Value);
 }
 
 void AGoKart::MoveRight(float Value) {
 
-	SteeringThrow = Value;
+	GKMovementComponent->SetSteeringThrow(Value);
 }
 
-void AGoKart::Server_SendMove_Implementation (FSyncMove Move) {
+void AGoKart::Server_SendMove_Implementation(FSyncMove Move) {
 
-	SimulateMove(Move);
+	GKMovementComponent->SimulateMove(Move);
 
 	ServerState.LastMove = Move;
 	ServerState.Transform = GetActorTransform();
-	ServerState.Velocity = Velocity;
+	ServerState.Velocity = GKMovementComponent->GetVelocity();
 }
 
 bool AGoKart::Server_SendMove_Validate(FSyncMove Move) {
