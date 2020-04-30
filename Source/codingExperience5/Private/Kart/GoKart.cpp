@@ -42,13 +42,13 @@ void AGoKart::Tick(float DeltaTime)
 
 	FVector Force = GetActorForwardVector() * MaxDrivingForce * Throttle;
 
-	Force += GetAirResistence();
-	Force += GetRollingResistence();
+		Force += GetAirResistence();
+		Force += GetRollingResistence();
 
 	FVector Acceleration = Force / Mass;
 
 	Velocity += Acceleration * DeltaTime;
-
+	 
 	SetRotation(DeltaTime);
 
 	SetLocationFromVelocity(DeltaTime);

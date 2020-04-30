@@ -6,6 +6,39 @@
 #include "GameFramework/Pawn.h"
 #include "GoKart.generated.h"
 
+USTRUCT(BlueprintType)
+struct FSyncMove
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY()
+	float Throttle;
+
+	UPROPERTY()
+	float SteeringThrow;
+
+	UPROPERTY()
+	float DeltaTime;
+
+	UPROPERTY()
+	float TimeStamp;
+};
+
+USTRUCT(BlueprintType)
+struct FSyncState
+{
+	GENERATED_USTRUCT_BODY()
+
+	UPROPERTY()
+	FVector Velocity;
+
+	UPROPERTY()
+	FTransform Transform;
+
+	UPROPERTY()
+	FSyncMove LastMove;
+};
+
 UCLASS()
 class CODINGEXPERIENCE5_API AGoKart : public APawn
 {
@@ -83,8 +116,10 @@ private:
 
 	UPROPERTY(Replicated)
 	FVector Velocity;
+
 	UPROPERTY(Replicated)
 	float SteeringThrow;
+
 	UPROPERTY(Replicated)
 	float Throttle;
 };
