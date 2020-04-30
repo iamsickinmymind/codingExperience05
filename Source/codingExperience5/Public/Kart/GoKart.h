@@ -48,34 +48,36 @@ public:
 	// Sets default values for this pawn's properties
 	AGoKart();
 
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-	void SetLocationFromVelocity(float &DeltaTime);
-	void SetRotation(float &DeltaTime);
-
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_MoveForward(float Value);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-	void Server_MoveRight(float Value);
-
-	FVector GetAirResistence();
-	FVector GetRollingResistence();
-
-	UFUNCTION()
-	void OnRep_ReplicatedTransform();
-
-public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+	void SetLocationFromVelocity(const float &DeltaTime);
+	void SetRotation(const float &DeltaTime, float InSteeringThrow);
+
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_SendMove(FSyncMove Move);
+
+	FVector GetAirResistence();
+	FVector GetRollingResistence();
+
+	UFUNCTION()
+	void OnRep_ServerState();
+
+private:
+
+	void SimulateMove(const FSyncMove& Move);
+	FSyncMove CreateMove(float DeltaTime);
+	void ClearAcknowledgedMoves(FSyncMove LastMove);
 
 protected:
 
@@ -111,15 +113,12 @@ protected:
 
 private:
 
-	UPROPERTY(ReplicatedUsing=OnRep_ReplicatedTransform)
-	FTransform ReplicatedTransform;
+	UPROPERTY(ReplicatedUsing=OnRep_ServerState)
+	FSyncState ServerState;
 
-	UPROPERTY(Replicated)
 	FVector Velocity;
-
-	UPROPERTY(Replicated)
 	float SteeringThrow;
-
-	UPROPERTY(Replicated)
 	float Throttle;
+
+	TArray<FSyncMove> UnacknowledgedMoves;
 };

@@ -83,7 +83,7 @@ public:
 	// End Actor interface
 
 	/** Handle pressing forwards */
-	void Server_MoveForward(float Val);
+	void Server_SendMove(float Val);
 	/** Setup the strings used on the hud */
 	void SetupInCarHUD();
 
