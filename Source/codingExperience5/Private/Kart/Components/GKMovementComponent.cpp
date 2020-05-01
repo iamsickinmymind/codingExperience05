@@ -14,16 +14,6 @@ UGKMovementComponent::UGKMovementComponent()
 	RollingResistenceCoefficient = 0.015;
 }
 
-void UGKMovementComponent::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void UGKMovementComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
-
 FSyncMove UGKMovementComponent::CreateMove(float DeltaTime) {
 
 	FSyncMove Move;

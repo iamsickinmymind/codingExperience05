@@ -37,8 +37,6 @@ public:
 
 	UGKMovementComponent();
 
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 	void SimulateMove(const FSyncMove& Move);
 	FSyncMove CreateMove(float DeltaTime);
 
@@ -46,10 +44,6 @@ public:
 	FORCEINLINE void SetVelocity(FVector NewVelocity) { Velocity = NewVelocity; };
 	FORCEINLINE void SetThrottle(float NewValue) { Throttle = NewValue; };
 	FORCEINLINE void SetSteeringThrow(float NewValue) { SteeringThrow = NewValue; };
-
-protected:
-
-	virtual void BeginPlay() override;
 
 private:
 
